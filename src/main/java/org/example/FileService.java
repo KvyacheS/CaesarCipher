@@ -28,15 +28,15 @@ public class FileService {
 
     private final int BUFF_SIZE_OUTPUT = BUFF_SIZE_INP * 2;
 
-    public void encrypt(Path input, Path output) throws FileServiceException {
-        crypt(input, output, CryptOperation.ENCRYPT);
+    public void encryptFile(Path input, Path output) throws FileServiceException {
+        cryptFile(input, output, CryptOperation.ENCRYPT);
     }
 
-    public void decrypt(Path input, Path output) throws FileServiceException {
-        crypt(input, output, CryptOperation.DECRYPT);
+    public void decryptFile(Path input, Path output) throws FileServiceException {
+        cryptFile(input, output, CryptOperation.DECRYPT);
     }
 
-    private void crypt(Path input, Path output, CryptOperation operation) throws FileServiceException {
+    private void cryptFile(Path input, Path output, CryptOperation operation) throws FileServiceException {
         CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder();
         try (ReadableByteChannel rbc = Files.newByteChannel(input, Set.of(READ)); WritableByteChannel wbc = Files.newByteChannel(output, EnumSet.of(WRITE, TRUNCATE_EXISTING, CREATE));) {
             ByteBuffer readBuffer = ByteBuffer.allocate(BUFF_SIZE_INP);

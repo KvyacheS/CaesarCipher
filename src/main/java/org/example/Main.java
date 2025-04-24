@@ -36,7 +36,7 @@ public class Main {
         Path pathOut = Path.of(pathStr + "\\output.txt");
         fileService = new FileService(cryptingService);
         try {
-            fileService.encrypt(pathInp, pathOut);
+            fileService.encryptFile(pathInp, pathOut);
         } catch (FileServiceException e) {
             System.out.println(e);
         }

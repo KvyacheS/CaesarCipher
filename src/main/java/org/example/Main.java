@@ -36,12 +36,15 @@ public class Main {
 
     public static final int BUFF_SIZE_OUTPUT = BUFF_SIZE_INP * 2;//После перекодирования
 
+    public static CryptingService cryptingService;
+
 
     public static void main(String[] args) throws IOException {
         String inputStr = "?";
         char[] chars = inputStr.toCharArray();
-        int shift = 3;
         //
+
+        cryptingService = new CryptingService(ALPHABET_RU,1,true);
         String pathStr = "C:\\Users\\KvyacheS\\Desktop\\cipherTest";
         Path pathInp = Path.of(pathStr + "//input.txt");
         Path pathOut = Path.of(pathStr + "//output.txt");
@@ -61,7 +64,7 @@ public class Main {
                 } else {
                     readBuffer.clear();
                 }
-                char[] encrypted = encrypt(charBuffer.array(), 1, ALPHABET_RU, charBuffer.length());
+                char[] encrypted = cryptingService.encrypt(charBuffer.array(),charBuffer.length());
                 ByteBuffer writeBuffer = ByteBuffer.allocate(512);
                 writeBuffer.put(Charset.defaultCharset().encode(CharBuffer.wrap(encrypted)));
                 writeBuffer.flip();
@@ -70,87 +73,5 @@ public class Main {
         } catch (IOException | BufferOverflowException | CryptingException e) {
             System.out.println(e);
         }
-
-        try {
-            System.out.println(decrypt(encrypt(chars, shift, ALPHABET_EN), shift, ALPHABET_EN));
-        } catch (CryptingException e) {
-
-        }
     }
-
-    public static char[] encrypt(char[] inputChars, int shift, char[] alphabet) throws CryptingException {
-        return crypt(inputChars, shift, alphabet, inputChars.length, true);
-    }
-
-    public static char[] encrypt(char[] inputChars, int shift, char[] alphabet, boolean skipMissedAlphabet) throws CryptingException {
-        return crypt(inputChars, shift, alphabet, inputChars.length, skipMissedAlphabet);
-    }
-
-    public static char[] encrypt(char[] inputChars, int shift, char[] alphabet, int effectiveLength) throws CryptingException {
-        return crypt(inputChars, shift, alphabet, effectiveLength, true);
-    }
-
-    public static char[] encrypt(char[] inputChars, int shift, char[] alphabet, int effectiveLength, boolean skipMissedAlphabet) throws CryptingException {
-        return crypt(inputChars, shift, alphabet, effectiveLength, skipMissedAlphabet);
-    }
-
-    public static char[] decrypt(char[] inputChars, int shift, char[] alphabet) throws CryptingException {
-        return crypt(inputChars, -shift, alphabet, inputChars.length, true);
-    }
-
-    public static char[] decrypt(char[] inputChars, int shift, char[] alphabet, boolean skipMissedAlphabet) throws CryptingException {
-        return crypt(inputChars, -shift, alphabet, inputChars.length, skipMissedAlphabet);
-    }
-
-    public static char[] decrypt(char[] inputChars, int shift, char[] alphabet, int effectiveLength) throws CryptingException {
-        return crypt(inputChars, -shift, alphabet, effectiveLength, true);
-    }
-
-    public static char[] decrypt(char[] inputChars, int shift, char[] alphabet, int effectiveLength, boolean skipMissedAlphabet) throws CryptingException {
-        return crypt(inputChars, -shift, alphabet, effectiveLength, skipMissedAlphabet);
-    }
-
-
-    public static char[] crypt(char[] inputChars, int shift, char[] alphabet, int effectiveLength, boolean skipMissedAlphabet) throws CryptingException {
-        char[] result = new char[effectiveLength];
-        for (int idx = 0; idx < effectiveLength; idx++) {
-            if (isSysChar(inputChars[idx])) {
-                result[idx] = inputChars[idx];
-                continue;
-            }
-            int charIdx = findAlphaBetPos(inputChars[idx], alphabet);
-            if (charIdx == -1) {
-                if (!skipMissedAlphabet) {
-                    throw new CryptingException(String.format("Symbol %s not exist in alphabet", inputChars[idx]));
-                }
-                result[idx] = inputChars[idx];
-                continue;
-            }
-            int newIdx = (alphabet.length + charIdx + shift) % alphabet.length;
-            result[idx] = alphabet[newIdx];
-        }
-        return result;
-    }
-
-    public static int findAlphaBetPos(char inputChar, char[] alphabet) {
-        int pos = 0;
-        while (pos < alphabet.length && alphabet[pos] != inputChar) {
-            pos++;
-        }
-        return pos < alphabet.length ? pos : -1;
-    }
-
-    public static boolean isSysChar(char ch) {
-        boolean result = false;
-        int idx = 0;
-        while (!result && idx < SYSCHARS.length) {
-            if (SYSCHARS[idx] == ch) {
-                result = true;
-            }
-            idx++;
-        }
-        return result;
-    }
-
-
 }

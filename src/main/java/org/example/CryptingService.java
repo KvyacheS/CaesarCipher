@@ -12,9 +12,13 @@ public class CryptingService {
 
     private final char[] alphabet;
 
-    private final int shift;
+    private int shift;
 
     private final boolean skipMissedAlphabet;
+
+    public void setShift(int shift) {
+        this.shift = shift;
+    }
 
     public char[] encrypt(char[] inputChars, int effectiveLength) throws CryptingException {
         return crypt(inputChars, this.shift, effectiveLength);

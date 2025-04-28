@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.BufferOverflowException;
 import java.nio.ByteBuffer;
 import java.nio.CharBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.channels.ReadableByteChannel;
 import java.nio.channels.WritableByteChannel;
 import java.nio.charset.Charset;
@@ -25,8 +26,6 @@ public class FileService {
     public CryptingService cryptingService;
 
     private final int BUFF_SIZE_INP = 256;
-
-    private final int BUFF_SIZE_OUTPUT = BUFF_SIZE_INP * 2;
 
     public void encryptFile(Path input, Path output) throws FileServiceException {
         cryptFile(input, output, CryptOperation.ENCRYPT);
@@ -63,7 +62,7 @@ public class FileService {
                     default:
                         throw new FileServiceException("UNSUPPORTED METHOD");
                 }
-                ByteBuffer writeBuffer = ByteBuffer.allocate(BUFF_SIZE_OUTPUT);
+                ByteBuffer writeBuffer = ByteBuffer.allocate(BUFF_SIZE_INP * 2);
                 writeBuffer.put(Charset.defaultCharset().encode(CharBuffer.wrap(crypted)));
                 writeBuffer.flip();
                 wbc.write(writeBuffer);
@@ -72,5 +71,34 @@ public class FileService {
             throw new FileServiceException(e);
         }
     }
+
+    public boolean compareFiles(Path first,Path second) {
+        boolean result = true;
+        try(FileChannel fileChannelFirst = FileChannel.open(first);
+            FileChannel fileChannelSecond = FileChannel.open(second)) {
+            if(fileChannelFirst.size() != fileChannelSecond.size()) {
+                return false;
+            }
+            ByteBuffer readBufferFirst = ByteBuffer.allocate(BUFF_SIZE_INP);
+            ByteBuffer readBufferSecond = ByteBuffer.allocate(BUFF_SIZE_INP);
+            while (fileChannelFirst.read(readBufferFirst) > -1  && fileChannelSecond.read(readBufferSecond)  > -1 && result) {
+                readBufferFirst.flip();
+                readBufferSecond.flip();
+                if(readBufferFirst.equals(readBufferSecond)){
+                    result = false;
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException();
+        }
+
+        return result;
+    }
+
+
+
+
+
+
 
 }

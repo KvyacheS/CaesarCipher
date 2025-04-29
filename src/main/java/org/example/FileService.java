@@ -35,6 +35,13 @@ public class FileService {
         cryptFile(input, output, CryptOperation.DECRYPT);
     }
 
+    /**
+     * Метод шифрования файла
+     * @param input путь до исходного файла
+     * @param output путь до выходного файла(
+     * @param operation типа операции {ENCRYPT,DECRYPT}
+     * @throws FileServiceException
+     */
     private void cryptFile(Path input, Path output, CryptOperation operation) throws FileServiceException {
         CharsetDecoder decoder = StandardCharsets.UTF_8.newDecoder();
         try (ReadableByteChannel rbc = Files.newByteChannel(input, Set.of(READ)); WritableByteChannel wbc = Files.newByteChannel(output, EnumSet.of(WRITE, TRUNCATE_EXISTING, CREATE));) {
@@ -52,6 +59,7 @@ public class FileService {
                     readBuffer.clear();
                 }
                 char[] crypted;
+
                 switch (operation) {
                     case DECRYPT:
                         crypted = cryptingService.encrypt(charBuffer.array(), charBuffer.length());
@@ -62,7 +70,10 @@ public class FileService {
                     default:
                         throw new FileServiceException("UNSUPPORTED METHOD");
                 }
-                ByteBuffer writeBuffer = ByteBuffer.allocate(BUFF_SIZE_INP * 2);
+                //Поскольку в UTF-8 количество байт выделенных на один закодированный символ может различаться
+                // делаем запас 4 (т.е) если было например 256 символов, которые весили 1 байт, преобразовались к
+                //256 символам размером 4 байта
+                ByteBuffer writeBuffer = ByteBuffer.allocate(BUFF_SIZE_INP * 4);
                 writeBuffer.put(Charset.defaultCharset().encode(CharBuffer.wrap(crypted)));
                 writeBuffer.flip();
                 wbc.write(writeBuffer);
@@ -72,33 +83,34 @@ public class FileService {
         }
     }
 
-    public boolean compareFiles(Path first,Path second) {
-        boolean result = true;
-        try(FileChannel fileChannelFirst = FileChannel.open(first);
-            FileChannel fileChannelSecond = FileChannel.open(second)) {
-            if(fileChannelFirst.size() != fileChannelSecond.size()) {
+    /**
+     * Метод сравнения файлов по содержимому
+     *
+     * @param first  Путь к первому файлу
+     * @param second путь ко веторому файлу
+     * @return true, если файлы равны и false если не равны
+     */
+    public boolean compareFiles(Path first, Path second) {
+        if (first == second) {
+            return true;
+        }
+        try (FileChannel fileChannelFirst = FileChannel.open(first);
+             FileChannel fileChannelSecond = FileChannel.open(second)) {
+            if (fileChannelFirst.size() != fileChannelSecond.size()) {
                 return false;
             }
             ByteBuffer readBufferFirst = ByteBuffer.allocate(BUFF_SIZE_INP);
             ByteBuffer readBufferSecond = ByteBuffer.allocate(BUFF_SIZE_INP);
-            while (fileChannelFirst.read(readBufferFirst) > -1  && fileChannelSecond.read(readBufferSecond)  > -1 && result) {
+            while (fileChannelFirst.read(readBufferFirst) > -1 && fileChannelSecond.read(readBufferSecond) > -1) {
                 readBufferFirst.flip();
                 readBufferSecond.flip();
-                if(readBufferFirst.equals(readBufferSecond)){
-                    result = false;
+                if (!readBufferFirst.equals(readBufferSecond)) {
+                    return false;
                 }
             }
         } catch (IOException e) {
             throw new RuntimeException();
         }
-
-        return result;
+        return true;
     }
-
-
-
-
-
-
-
 }

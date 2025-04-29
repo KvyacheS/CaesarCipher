@@ -167,7 +167,7 @@ public class Main {
             try {
                 fileService.decryptFile(brutePath, pathTo);
                 if (fileService.compareFiles(brutePath, referencePath)) {
-                    System.out.printf("Shift(key is %d) ", i);
+                    System.out.printf("Shift(key) is %d ", i);
                     Files.delete(brutePath);
                     return;
                 }
